@@ -11,7 +11,8 @@ reload(sys)
 sys.setdefaultencoding('utf8')
 
 API_TOKEN = 'DONT TELL YOU'
-WEATHER_API_URI = 'https://api.thinkpage.cn/v2/weather/all.json?language=zh-chs&unit=c&aqi=city&key=FSUZWU8RKI&city=%s'
+WEATHER_API_URI = 'https://api.thinkpage.cn/v2/weather/all.json?language=zh-chs&unit=c&aqi=city&key=%s&city=%s'
+WEATHER_API_URI = WEATHER_API_URI % (API_TOKEN, '%s')
 
 logger = logging.getLogger('web')
 
