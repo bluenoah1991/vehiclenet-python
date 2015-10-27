@@ -5,6 +5,7 @@ import tornado.web
 import urllib2
 import logging
 import json
+import datetime
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -69,22 +70,40 @@ class WeatherHandler(tornado.web.RequestHandler):
 		day = None
 		sktemp = None
 		index_xc = None
+		pm25 = None
 		
 		weather = object_from_api.get('weather')
-		future = None
+		futures = None
 		if weather is not None and len(weather) > 0:
 			weather = weather[0]
 			now = weather.get('now')
 			if now is not None:
-				sksd = now.get('humidity')
-			future = weather.get('future')
-			if future is not None and len(future) > 0:
-				future_0 = future[0]
+				sktemp = sksd = now.get('humidity')
+				air_quality = now.get('air_quality')
+				if air_quality is not None:
+					city_air_quality = air_quality.get('city')
+					pm25 = city_air_quality.get('pm25')
+			futures = weather.get('future')
+			if futures is not None and len(futures) > 0:
+				future_0 = futures[0]
 				hightemp = future_0.get('high')
 				wind = future_0.get('wind')
 				weather = future_0.get('text')
 				lowtemp = future_0.get('low')
-				
+			today = weather.get('today')
+			if today is not None:
+				suggestion = today.get('suggestion')
+				if suggestion is not None:
+					car_washing = suggestion.get('car_washing')
+					if car_washing is not None:
+						index_xc = car_washing.get('brief')
+		img = None # TODO
+		now_time = datetime.datetime.now()
+		skhour = now_time.hour
+		skmin = now_time.minute
+		month = now_time.month
+		year = now_time.year
+		day = now_time.day
 
 		res = '{ '
 		res_today_section = '"today": { ' +
@@ -104,22 +123,36 @@ class WeatherHandler(tornado.web.RequestHandler):
 			' }, '
 		res += res_today_section
 		res_future_section = '"future": [ '
-		res_future_section_in = []
-		for _ in futures:
-			res_future_section_in.append('{ ' +
-				'"hightemp": "%s", ' % hightemp +
-				'"wind": "%s", ' % wind +
-				'"img": "%s", ' % img + # TODO WTF
-				'"weather": "%s", ' % weather +
-				'"lowtemp": "%s"' % lowtemp +
-				' }')
-		res_future_section += ','.join(res_future_section_in)
+		if futures is not None:
+			res_future_section_in = []
+			for _ in futures:
+				hightemp_ = None
+				wind_ = None
+				img_ = None
+				weather_ = None
+				lowtemp_ = None
+
+				hightemp_ = _.get('high')
+				wind_ = _.get('wind')
+				img_ = None # TODO
+				weather_ = _.get('text')
+				lowtemp_ = _.get('low')
+
+				res_future_section_in.append('{ ' +
+					'"hightemp": "%s", ' % hightemp_ +
+					'"wind": "%s", ' % wind_ +
+					'"img": "%s", ' % img_ + # TODO WTF
+					'"weather": "%s", ' % weather_ +
+					'"lowtemp": "%s"' % lowtemp_ +
+					' }')
+			res_future_section += ','.join(res_future_section_in)
 		res_future_section += ' ], '
 		res += res_future_section
-		res_pm_2_5 = '"pm2_5": %s, ' % pm2_5
-		res += res_pm_2_5
-		res_sutime = '"sutime": %s, ' % sutime
-		res += res_sutime
+
+		res_pm_25 = '"pm2.5": %s, ' % pm25
+		res += res_pm_25
+		#res_sutime = '"sutime": %s, ' % sutime
+		#res += res_sutime
 		res_city = '"city": "%s"' % city_name
 		res += ' }'
 		self.write(res)
