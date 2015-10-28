@@ -12,8 +12,6 @@ sys.setdefaultencoding('utf8')
 sys.path.append('..')
 import common
 
-import pdb
-
 API_TOKEN = 'FSUZWU8RKI'
 WEATHER_API_URI = 'https://api.thinkpage.cn/v2/weather/all.json?language=zh-chs&unit=c&aqi=city&key=%s&city=%s'
 WEATHER_API_URI = WEATHER_API_URI % (API_TOKEN, '%s')
@@ -103,9 +101,7 @@ class WeatherHandler(tornado.web.RequestHandler):
 
 	def get(self):
 
-		pdb.set_trace()
-
-		logger.debug('request info') # TODO
+		logger.debug('Request URI: %s' % self.request.uri)
 
 		city_name = None
 		if self.request.arguments.has_key('city'):
@@ -129,7 +125,6 @@ class WeatherHandler(tornado.web.RequestHandler):
 		if res_box is not None:
 			res_ = res_box.get('res')
 			time_ = res_box.get('time')
-			pdb.set_trace()
 			if res_ is not None and time_ is not None and datetime.datetime.now() < time_ + interval:
 				self.write(res_)
 				return

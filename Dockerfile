@@ -13,6 +13,7 @@ EXPOSE 80
 
 COPY web.py /root/
 COPY common.py /root/
+COPY config.py /root/
 RUN mkdir /root/vehiclenet
 COPY vehiclenet /root/vehiclenet/
 CMD /usr/bin/python /root/web.py
