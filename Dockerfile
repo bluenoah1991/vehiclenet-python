@@ -15,5 +15,5 @@ COPY web.py /root/
 COPY common.py /root/
 RUN mkdir /root/vehiclenet
 COPY vehiclenet /root/vehiclenet/
-#CMD /usr/bin/python /root/web.py
+CMD /usr/bin/python /root/web.py
 
