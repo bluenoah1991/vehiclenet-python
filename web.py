@@ -6,6 +6,7 @@ import tornado.web
 import logging
 import logging.handlers
 import re
+from urllib import unquote
 
 import config
 import vehiclenet.weather
@@ -55,7 +56,7 @@ class LogHandler(tornado.web.RequestHandler):
 		for _ in log_file_lines[::-1]:
 			line_limit -= 1
 			if line_limit > 0:
-				self.write(_ + '<BR/>')
+				self.write(unquote(_) + '<BR/>')
 
 
 settings = {
