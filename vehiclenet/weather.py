@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, os
+import sys, os, threading
 import tornado.web
 import urllib2
 import logging
@@ -20,11 +20,17 @@ WEATHER_API_URI = WEATHER_API_URI % (API_TOKEN, '%s')
 
 logger = logging.getLogger('web')
 
+interval = datetime.timedelta(minutes=59)
+
 class WeatherHandler(tornado.web.RequestHandler):
 
 	city_list_from_thinkpage = None
 	city_name_list = []
-	city_name_cache = {}
+	city_name_cache = {} # TODO persistence
+	city_name_result_map = {} # TODO persistence
+
+	lock_city_name_cache = threading.Lock()
+	lock_city_name_result_map = threading.Lock()
 
 	@classmethod
 	def cache(cls):
@@ -51,12 +57,21 @@ class WeatherHandler(tornado.web.RequestHandler):
 					cls.city_name_list.append(name)
 				
 	def name_parse(self, city_name):
-		city_strict_name = WeatherHandler.city_name_cache.get(city_name)
+		city_strict_name = None
+		WeatherHandler.lock_city_name_cache.acquire()
+		try:
+			city_strict_name = WeatherHandler.city_name_cache.get(city_name)
+		finally:
+			WeatherHandler.lock_city_name_cache.release()
 		if city_strict_name is not None:
 			return city_strict_name
 		for _ in WeatherHandler.city_name_list:
 			if _ in city_name:
-				WeatherHandler.city_name_cache[city_name] = _
+				WeatherHandler.lock_city_name_cache.acquire()
+				try:
+					WeatherHandler.city_name_cache[city_name] = _
+				finally:
+					WeatherHandler.lock_city_name_cache.release()
 				return _
 
 	def get(self):
@@ -78,6 +93,19 @@ class WeatherHandler(tornado.web.RequestHandler):
 			logger.error('No matching area name (%s)' % raw_city_name)
 			self.write(201)
 			return
+		res_box = None
+		WeatherHandler.lock_city_name_result_map.acquire()
+		try:
+			res_box = WeatherHandler.city_name_result_map.get(city_name)
+		finally:
+			WeatherHandler.lock_city_name_result_map.release()
+		if res_box is not None:
+			res_ = res_box.get('res')
+			time_ = res_box.get('time')
+			pdb.set_trace()
+			if res_ is not None and time_ is not None and datetime.datetime.now() < time_ + interval:
+				self.write(res_)
+				return
 		content_from_api = None
 		try:
 			response = urllib2.urlopen(WEATHER_API_URI % city_name)
@@ -138,7 +166,6 @@ class WeatherHandler(tornado.web.RequestHandler):
 					pm25 = city_air_quality.get('pm25')
 			futures = weather.get('future')
 			if futures is not None and len(futures) > 0:
-				pdb.set_trace()
 				future_0 = futures[0]
 				hightemp = future_0.get('high')
 				wind = future_0.get('wind')
@@ -207,9 +234,17 @@ class WeatherHandler(tornado.web.RequestHandler):
 		res += res_pm_25
 		#res_sutime = '"sutime": %s, ' % sutime
 		#res += res_sutime
-		res_city = '"city": "%s"' % city_name
+		res_city = '"city": "%s"' % raw_city_name
 		res += res_city
 		res += ' }'
+		WeatherHandler.lock_city_name_result_map.acquire()
+		try:
+			WeatherHandler.city_name_result_map[city_name] = {
+				'res': res,
+				'time': datetime.datetime.now()
+			}
+		finally:
+			WeatherHandler.lock_city_name_result_map.release()
 		self.write(res)
 			
 	def write(self, trunk):
