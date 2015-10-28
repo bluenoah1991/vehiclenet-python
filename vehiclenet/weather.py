@@ -9,14 +9,55 @@ import datetime
 
 reload(sys)
 sys.setdefaultencoding('utf8')
+sys.path.append('..')
+import common
 
-API_TOKEN = 'DONT TELL YOU'
+API_TOKEN = 'FSUZWU8RKI'
 WEATHER_API_URI = 'https://api.thinkpage.cn/v2/weather/all.json?language=zh-chs&unit=c&aqi=city&key=%s&city=%s'
 WEATHER_API_URI = WEATHER_API_URI % (API_TOKEN, '%s')
 
 logger = logging.getLogger('web')
 
 class WeatherHandler(tornado.web.RequestHandler):
+
+	city_list_from_thinkpage = None
+	city_name_list = []
+	city_name_cache = {}
+
+	@classmethod
+	def cache(cls):
+		filename = common.get_file_from_current_dir(__file__, 'city_list_from_thinkpage.json')
+		if not os.path.exists(filename):
+			logger.error('Missing file \'city_list_from_thinkpage.json\'')
+			return
+		try:
+			city_list_from_thinkpage_file = open(filename, 'r')
+			city_list_from_thinkpage_content = city_list_from_thinkpage_file.read()
+			city_list_from_thinkpage = json.loads(city_list_from_thinkpage_content)
+			if city_list_from_thinkpage is None:
+				raise Exception('city_list_from_thinkpage is None')
+		except Exception, e:
+			logger.error('Failed to read the file (city_list_from_thinkpage.json), error: %s' % e)
+		finally:
+			if city_list_from_thinkpage_file is not None:
+				city_list_from_thinkpage_file.close()
+			return
+		for _ in city_list_from_thinkpage[::-1]:
+			id_ = _.get('id')
+			if id_ is not None and id_.startswith('CH'):
+				name = _.get('name')
+				if name is not None:
+					city_name_list.append(name)
+				
+	def name_parse(self, city_name):
+		city_strict_name = city_name_cache.get(city_name)
+		if city_strict_name is not None:
+			return city_strict_name
+		for _ in city_name_list:
+			if _ in city_name:
+				city_name_cache[city_name] = _
+				return _
+
 	def get(self):
 
 		logger.debug('request info') # TODO
@@ -159,9 +200,6 @@ class WeatherHandler(tornado.web.RequestHandler):
 		self.write(res)
 			
 	
-	def name_parse(self, city_name):
-		return city_name # TODO
-		pass
 		
 
 

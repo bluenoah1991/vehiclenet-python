@@ -19,6 +19,9 @@ def deamon(chdir = False):
 		print 'fork #1 failed: %d (%s)' % (e.errno, e.strerror)
 		os._exit(1)
 
+def init():
+	vehiclenet.weather.WeatherHandler.cache()
+
 class DefaultHandler(tornado.web.RequestHandler):
 	def get(self):
 		self.write('VehicleNet Say Hello!')
@@ -47,6 +50,8 @@ if __name__ == "__main__":
 	logger = logging.getLogger('web')
 	logger.addHandler(handler)
 	logger.setLevel(logging.DEBUG)
+
+	init()
 
 	application.listen(80)
 	print 'Server is running, listening on port 80....'

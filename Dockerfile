@@ -12,5 +12,7 @@ RUN pip install tornado
 EXPOSE 80
 
 COPY web.py /root/
-CMD /usr/bin/python /root/web.py
+COPY common.py /root/
+COPY vehiclenet/ /root/
+#CMD /usr/bin/python /root/web.py
 
