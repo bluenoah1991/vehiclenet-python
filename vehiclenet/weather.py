@@ -12,6 +12,8 @@ sys.setdefaultencoding('utf8')
 sys.path.append('..')
 import common
 
+import pdb
+
 API_TOKEN = 'FSUZWU8RKI'
 WEATHER_API_URI = 'https://api.thinkpage.cn/v2/weather/all.json?language=zh-chs&unit=c&aqi=city&key=%s&city=%s'
 WEATHER_API_URI = WEATHER_API_URI % (API_TOKEN, '%s')
@@ -33,40 +35,49 @@ class WeatherHandler(tornado.web.RequestHandler):
 		try:
 			city_list_from_thinkpage_file = open(filename, 'r')
 			city_list_from_thinkpage_content = city_list_from_thinkpage_file.read()
-			city_list_from_thinkpage = json.loads(city_list_from_thinkpage_content)
-			if city_list_from_thinkpage is None:
+			cls.city_list_from_thinkpage = json.loads(city_list_from_thinkpage_content)
+			if cls.city_list_from_thinkpage is None:
 				raise Exception('city_list_from_thinkpage is None')
 		except Exception, e:
 			logger.error('Failed to read the file (city_list_from_thinkpage.json), error: %s' % e)
 		finally:
 			if city_list_from_thinkpage_file is not None:
 				city_list_from_thinkpage_file.close()
-			return
-		for _ in city_list_from_thinkpage[::-1]:
+		for _ in cls.city_list_from_thinkpage[::-1]:
 			id_ = _.get('id')
 			if id_ is not None and id_.startswith('CH'):
 				name = _.get('name')
 				if name is not None:
-					city_name_list.append(name)
+					cls.city_name_list.append(name)
 				
 	def name_parse(self, city_name):
-		city_strict_name = city_name_cache.get(city_name)
+		city_strict_name = WeatherHandler.city_name_cache.get(city_name)
 		if city_strict_name is not None:
 			return city_strict_name
-		for _ in city_name_list:
+		for _ in WeatherHandler.city_name_list:
 			if _ in city_name:
-				city_name_cache[city_name] = _
+				WeatherHandler.city_name_cache[city_name] = _
 				return _
 
 	def get(self):
 
+		pdb.set_trace()
+
 		logger.debug('request info') # TODO
 
-		city_name = self.get_argument('city')
+		city_name = None
+		if self.request.arguments.has_key('city'):
+			city_name = self.get_argument('city')
 		if city_name is None or len(city_name) == 0:
+			logger.error('Missing argument \'city\'')
 			self.write(201)
 			return
+		raw_city_name = city_name
 		city_name = self.name_parse(city_name)
+		if city_name is None or len(city_name) == 0:
+			logger.error('No matching area name (%s)' % raw_city_name)
+			self.write(201)
+			return
 		content_from_api = None
 		try:
 			response = urllib2.urlopen(WEATHER_API_URI % city_name)
@@ -102,7 +113,7 @@ class WeatherHandler(tornado.web.RequestHandler):
 		hightemp = None
 		wind = None
 		img = None # TODO
-		weather = None
+		weather_text = None
 		lowtemp = None
 		sksd = None
 		skhour = None
@@ -127,10 +138,11 @@ class WeatherHandler(tornado.web.RequestHandler):
 					pm25 = city_air_quality.get('pm25')
 			futures = weather.get('future')
 			if futures is not None and len(futures) > 0:
+				pdb.set_trace()
 				future_0 = futures[0]
 				hightemp = future_0.get('high')
 				wind = future_0.get('wind')
-				weather = future_0.get('text')
+				weather_text = future_0.get('text')
 				lowtemp = future_0.get('low')
 			today = weather.get('today')
 			if today is not None:
@@ -148,11 +160,11 @@ class WeatherHandler(tornado.web.RequestHandler):
 		day = now_time.day
 
 		res = '{ '
-		res_today_section = '"today": { ' +
+		res_today_section = ('"today": { ' +
 			'"hightemp": "%s", ' % hightemp +
 			'"wind": "%s", ' % wind +
 			'"img": "%s", ' % img + # TODO WTF
-			'"weather": "%s", ' % weather +
+			'"weather": "%s", ' % weather_text +
 			'"lowtemp": "%s", ' % lowtemp +
 			'"sksd": "%s", ' % sksd +
 			'"skhour": %s, ' % skhour +
@@ -162,7 +174,7 @@ class WeatherHandler(tornado.web.RequestHandler):
 			'"day": %s, ' % day +
 			'"sktemp": %s, ' % sktemp +
 			'"index_xc": "%s"' % index_xc +
-			' }, '
+			' }, ')
 		res += res_today_section
 		res_future_section = '"future": [ '
 		if futures is not None:
@@ -180,13 +192,13 @@ class WeatherHandler(tornado.web.RequestHandler):
 				weather_ = _.get('text')
 				lowtemp_ = _.get('low')
 
-				res_future_section_in.append('{ ' +
+				res_future_section_in.append(('{ ' +
 					'"hightemp": "%s", ' % hightemp_ +
 					'"wind": "%s", ' % wind_ +
 					'"img": "%s", ' % img_ + # TODO WTF
 					'"weather": "%s", ' % weather_ +
 					'"lowtemp": "%s"' % lowtemp_ +
-					' }')
+					' }'))
 			res_future_section += ','.join(res_future_section_in)
 		res_future_section += ' ], '
 		res += res_future_section
@@ -196,10 +208,15 @@ class WeatherHandler(tornado.web.RequestHandler):
 		#res_sutime = '"sutime": %s, ' % sutime
 		#res += res_sutime
 		res_city = '"city": "%s"' % city_name
+		res += res_city
 		res += ' }'
 		self.write(res)
 			
-	
+	def write(self, trunk):
+		if type(trunk) == int:
+			trunk = str(trunk)
+		super(WeatherHandler, self).write(trunk)
+		
 		
 
 

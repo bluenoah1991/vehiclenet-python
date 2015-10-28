@@ -5,6 +5,7 @@ import tornado.ioloop
 import tornado.web
 import logging
 import logging.handlers
+import re
 
 import vehiclenet.weather
 
@@ -32,7 +33,7 @@ settings = {
 
 application = tornado.web.Application([
 	(r"/", DefaultHandler),
-	(r"/weather/findWeather.htm", WeatherHandler),
+	(r"/weather/findWeather.htm", vehiclenet.weather.WeatherHandler),
 ], **settings)
 
 if __name__ == "__main__":
@@ -44,8 +45,9 @@ if __name__ == "__main__":
 	fmt = '%(asctime)s - %(filename)s:%(lineno)s - %(name)s - %(message)s'
 	formatter = logging.Formatter(fmt)
 	handler = logging.handlers.TimedRotatingFileHandler(
-		'logging_', 'H', 1, 120)
-	handler.suffix = '%Y%m%d%H%M.log'
+		'%s/logging' % logdir, 'M', 20, 360)
+	handler.suffix = '%Y%m%d%H%M%S.log'
+	handler.extMatch = re.compile(r'^\d{4}\d{2}\d{2}\d{2}\d{2}\d{2}')
 	handler.setFormatter(formatter)
 	logger = logging.getLogger('web')
 	logger.addHandler(handler)
