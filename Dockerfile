@@ -10,6 +10,7 @@ RUN apt-get install python-pip build-essential python-dev -y
 RUN pip install tornado
 
 EXPOSE 80
+VOLUME ['/etc/localtime']
 
 COPY web.py /root/
 COPY common.py /root/
