@@ -10,7 +10,9 @@ RUN apt-get install python-pip build-essential python-dev -y
 RUN pip install tornado
 
 EXPOSE 80
-VOLUME ['/etc/localtime']
+#VOLUME ['/etc/localtime']
+
+RUN echo Asia/Shanghai > /etc/timezone && dpkg-reconfigure --frontend noninteractive tzdata
 
 COPY web.py /root/
 COPY common.py /root/
