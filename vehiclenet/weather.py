@@ -32,14 +32,17 @@ class WeatherHandler(tornado.web.RequestHandler):
 	lock_city_name_cache = threading.Lock()
 	lock_city_name_result_map = threading.Lock()
 
+	img_code_map = {}
+
 	@classmethod
 	def cache(cls):
-		filename = common.get_file_from_current_dir(__file__, 'city_list_from_thinkpage.json')
-		if not os.path.exists(filename):
+		city_list_from_thinkpage_filename = \
+			common.get_file_from_current_dir(__file__, 'city_list_from_thinkpage.json')
+		if not os.path.exists(city_list_from_thinkpage_filename):
 			logger.error('Missing file \'city_list_from_thinkpage.json\'')
 			return
 		try:
-			city_list_from_thinkpage_file = open(filename, 'r')
+			city_list_from_thinkpage_file = open(city_list_from_thinkpage_filename, 'r')
 			city_list_from_thinkpage_content = city_list_from_thinkpage_file.read()
 			cls.city_list_from_thinkpage = json.loads(city_list_from_thinkpage_content)
 			if cls.city_list_from_thinkpage is None:
@@ -55,6 +58,26 @@ class WeatherHandler(tornado.web.RequestHandler):
 				name = _.get('name')
 				if name is not None:
 					cls.city_name_list.append(name)
+
+		# img code
+		
+		img_code_map_filename = \
+			common.get_file_from_current_dir(__file__, 'img_code_map.json')
+		if not os.path.exists(img_code_map_filename):
+			logger.error('Missing file \'img_code_map.json\'')
+			return
+		try:
+			img_code_map_file = open(img_code_map_filename, 'r')
+			img_code_map_content = img_code_map_file.read()
+			img_code_map = json.loads(img_code_map_content)
+			if img_code_map is None:
+				raise Exception('img_code_map is None')
+			cls.img_code_map = img_code_map
+		except Exception, e:
+			logger.error('Failed to read the file (img_code_map.json), error: %s' % e)
+		finally:
+			if img_code_map_file is not None:
+				img_code_map_file.close()
 				
 	def name_parse(self, city_name):
 		city_strict_name = None
@@ -73,6 +96,10 @@ class WeatherHandler(tornado.web.RequestHandler):
 				finally:
 					WeatherHandler.lock_city_name_cache.release()
 				return _
+
+	def transform_img_code(self, code):
+		new_code = WeatherHandler.img_code_map.get(code)
+		return new_code
 
 	def get(self):
 
@@ -140,7 +167,7 @@ class WeatherHandler(tornado.web.RequestHandler):
 
 		hightemp = None
 		wind = None
-		img = None # TODO
+		img = None 
 		weather_text = None
 		lowtemp = None
 		sksd = None
@@ -159,7 +186,8 @@ class WeatherHandler(tornado.web.RequestHandler):
 			weather = weather[0]
 			now = weather.get('now')
 			if now is not None:
-				sktemp = sksd = now.get('humidity')
+				sktemp = now.get('temperature') + u"\u2103"
+				sksd = now.get('humidity')
 				air_quality = now.get('air_quality')
 				if air_quality is not None:
 					city_air_quality = air_quality.get('city')
@@ -167,10 +195,14 @@ class WeatherHandler(tornado.web.RequestHandler):
 			futures = weather.get('future')
 			if futures is not None and len(futures) > 0:
 				future_0 = futures[0]
-				hightemp = future_0.get('high')
+				hightemp = future_0.get('high') + u"\u2103"
 				wind = future_0.get('wind')
 				weather_text = future_0.get('text')
-				lowtemp = future_0.get('low')
+				lowtemp = future_0.get('low') + u"\u2103"
+				img = '["%s", "%s"]' % (
+					self.transform_img_code(future_0.get('code1')), 
+					self.transform_img_code(future_0.get('code2'))
+				)
 			today = weather.get('today')
 			if today is not None:
 				suggestion = today.get('suggestion')
@@ -178,7 +210,6 @@ class WeatherHandler(tornado.web.RequestHandler):
 					car_washing = suggestion.get('car_washing')
 					if car_washing is not None:
 						index_xc = car_washing.get('brief')
-		img = None # TODO
 		now_time = datetime.datetime.now()
 		skhour = now_time.hour
 		skmin = now_time.minute
@@ -190,7 +221,7 @@ class WeatherHandler(tornado.web.RequestHandler):
 		res_today_section = ('"today": { ' +
 			'"hightemp": "%s", ' % hightemp +
 			'"wind": "%s", ' % wind +
-			'"img": "%s", ' % img + # TODO WTF
+			'"img": %s, ' % img +
 			'"weather": "%s", ' % weather_text +
 			'"lowtemp": "%s", ' % lowtemp +
 			'"sksd": "%s", ' % sksd +
@@ -199,30 +230,37 @@ class WeatherHandler(tornado.web.RequestHandler):
 			'"month": %s, ' % month +
 			'"year": %s, ' % year +
 			'"day": %s, ' % day +
-			'"sktemp": %s, ' % sktemp +
+			'"sktemp": "%s", ' % sktemp +
 			'"index_xc": "%s"' % index_xc +
 			' }, ')
 		res += res_today_section
 		res_future_section = '"future": [ '
 		if futures is not None:
 			res_future_section_in = []
+			first__ = True
 			for _ in futures:
+				if first__:
+					first__ = False
+					continue
 				hightemp_ = None
 				wind_ = None
 				img_ = None
 				weather_ = None
 				lowtemp_ = None
 
-				hightemp_ = _.get('high')
+				hightemp_ = _.get('high') + u"\u2103"
 				wind_ = _.get('wind')
-				img_ = None # TODO
+				img_ = '["%s", "%s"]' % (
+					self.transform_img_code(_.get('code1')), 
+					self.transform_img_code(_.get('code2'))
+				)
 				weather_ = _.get('text')
-				lowtemp_ = _.get('low')
+				lowtemp_ = _.get('low') + u"\u2103"
 
 				res_future_section_in.append(('{ ' +
 					'"hightemp": "%s", ' % hightemp_ +
 					'"wind": "%s", ' % wind_ +
-					'"img": "%s", ' % img_ + # TODO WTF
+					'"img": %s, ' % img_ +
 					'"weather": "%s", ' % weather_ +
 					'"lowtemp": "%s"' % lowtemp_ +
 					' }'))

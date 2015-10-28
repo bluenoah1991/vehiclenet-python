@@ -33,7 +33,7 @@ settings = {
 
 application = tornado.web.Application([
 	(r"/", DefaultHandler),
-	(r"/weather/findWeather.htm", vehiclenet.weather.WeatherHandler),
+	(r"/carlink/weather/findWeather.htm", vehiclenet.weather.WeatherHandler),
 ], **settings)
 
 if __name__ == "__main__":
