@@ -126,7 +126,7 @@ class WeatherHandler(tornado.web.RequestHandler):
 			res_ = res_box.get('res')
 			time_ = res_box.get('time')
 			if res_ is not None and time_ is not None and datetime.datetime.now() < time_ + interval:
-				self.write(res_)
+				self.write(res_ % raw_city_name)
 				return
 		content_from_api = None
 		try:
@@ -267,7 +267,7 @@ class WeatherHandler(tornado.web.RequestHandler):
 		res += res_pm_25
 		#res_sutime = '"sutime": %s, ' % sutime
 		#res += res_sutime
-		res_city = '"city": "%s"' % raw_city_name
+		res_city = '"city": "%s"'
 		res += res_city
 		res += ' }'
 		WeatherHandler.lock_city_name_result_map.acquire()
@@ -278,6 +278,7 @@ class WeatherHandler(tornado.web.RequestHandler):
 			}
 		finally:
 			WeatherHandler.lock_city_name_result_map.release()
+		res = res % raw_city_name
 		self.write(res)
 			
 	def write(self, trunk):
