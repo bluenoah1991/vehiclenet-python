@@ -166,8 +166,8 @@ class MusicTopHandler(tornado.web.RequestHandler):
 				song_list_ = []
 				for _ in songList:
 					songid = _.get('songId')
-					songname = None
-					singer = None
+					songname = ''
+					singer = ''
 					if songid is not None:
 						name_box = song_id_name_map.get(str(songid))
 						if name_box is not None:
@@ -176,15 +176,31 @@ class MusicTopHandler(tornado.web.RequestHandler):
 						else:
 							songname = _.get('songName')
 							singer = _.get('artistName')
+					if songname is None:
+						songname = ''
+					if singer is None:
+						singer = ''
 					album = _.get('albumName')
+					if album is None:
+						album = ''
 					songlink = _.get('songLink')
+					if songlink is None:
+						songlink = ''
 					lrclink = _.get('lrcLink')
 					if lrclink is not None and len(lrclink) > 0:
 						if lrclink.endswith('.lrc'):
 							lrclink = 'http://ting.baidu.com' + lrclink
+					if lrclink is None:
+						lrclink = ''
 					time = _.get('time')
+					if time is None:
+						time = 0
 					size = _.get('size')
+					if size is None:
+						size = 0
 					format_ = _.get('format')
+					if format_ is None:
+						format_ = ''
 					song_ = ('{ ' +
 						'"songname": "%s", ' % songname +
 						'"songid": "%s", ' % songid +

@@ -92,7 +92,11 @@ class NewsHandler(tornado.web.RequestHandler):
 				link_ = _.a
 				if link_ is not None:
 					href_ = link_.get('href')
+					if href_ is None:
+						href_ = ''
 					text_ = link_.get_text()
+					if text_ is None:
+						text_ = ''
 					title_ = ('{ ' +
 						'"url": "%s", ' % href_ +
 						'"title": "%s"' % text_ +
