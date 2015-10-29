@@ -11,6 +11,7 @@ reload(sys)
 sys.setdefaultencoding('utf8')
 sys.path.append('..')
 import common
+import config
 
 API_TOKEN = 'FSUZWU8RKI'
 WEATHER_API_URI = 'https://api.thinkpage.cn/v2/weather/all.json?language=zh-chs&unit=c&aqi=city&key=%s&city=%s'
@@ -101,7 +102,16 @@ class WeatherHandler(tornado.web.RequestHandler):
 
 	def get(self):
 
-		logger.debug('Request URI: %s' % self.request.uri)
+		pretty_state = False
+		if config.Mode == 'DEBUG':
+			logger.debug('Request URI: %s' % self.request.uri)
+			if self.request.arguments.has_key('pretty'):
+				pretty_state = self.get_argument('pretty')
+
+		if config.Mode == 'DEBUG' and pretty_state is not None and pretty_state:
+			self.set_header('Content-Type', 'text/html; charset=UTF-8')
+		else:
+			self.set_header('Content-Type', 'application/json; charset=UTF-8')
 
 		city_name = None
 		if self.request.arguments.has_key('city'):
@@ -126,7 +136,10 @@ class WeatherHandler(tornado.web.RequestHandler):
 			res_ = res_box.get('res')
 			time_ = res_box.get('time')
 			if res_ is not None and time_ is not None and datetime.datetime.now() < time_ + interval:
-				self.write(res_ % raw_city_name)
+				res_ = res_ % raw_city_name
+				if config.Mode == 'DEBUG' and pretty_state is not None and pretty_state:
+					res_ = common.pretty_print(res_)
+				self.write(res_)
 				return
 		content_from_api = None
 		try:
@@ -279,6 +292,8 @@ class WeatherHandler(tornado.web.RequestHandler):
 		finally:
 			WeatherHandler.lock_city_name_result_map.release()
 		res = res % raw_city_name
+		if config.Mode == 'DEBUG' and pretty_state is not None and pretty_state:
+			res = common.pretty_print(res)
 		self.write(res)
 			
 	def write(self, trunk):
