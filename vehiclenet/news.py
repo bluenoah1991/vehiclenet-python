@@ -14,8 +14,6 @@ sys.path.append('..')
 import common
 import config
 
-import pdb
-
 BAIDU_NEWS_URI = 'http://news.baidu.com/ns?tn=newstitle&word=%s'
 
 logger = logging.getLogger('web')
@@ -87,7 +85,6 @@ class NewsHandler(tornado.web.RequestHandler):
 		res = '{ '
 		res += '"result": ['
 		news_id_list = []
-		pdb.set_trace()
 		titles_h3 = object_from_api.select('h3[class="c-title"]')
 		if titles_h3 is not None and len(titles_h3) > 0:
 			titles_ = []
