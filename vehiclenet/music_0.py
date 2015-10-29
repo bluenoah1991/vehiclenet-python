@@ -16,7 +16,7 @@ import config
 
 import pdb
 
-BAIDU_SEARCH_URI = 'http://music.baidu.com/search/song?key=%s'
+BAIDU_TOP_URI = 'http://music.baidu.com/top/new/week'
 BAIDU_SONGLINK_URI = 'http://play.baidu.com/data/music/songlink?songIds=%s'
 BAIDU_SONGINFO_URI = 'http://play.baidu.com/data/music/songInfo?songIds=%s'
 
@@ -24,11 +24,11 @@ logger = logging.getLogger('web')
 
 interval = datetime.timedelta(minutes=59)
 
-class MusicSearchHandler(tornado.web.RequestHandler):
+class MusicTopHandler(tornado.web.RequestHandler):
 
-	song_name_result_map = {} # TODO persistence
+	music_top_cache = {} # TODO persistence
 
-	lock_song_name_result_map = threading.Lock()
+	music_top_cache_expire_time = datetime.datetime.min
 
 	def get(self):
 
@@ -45,38 +45,23 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 		else:
 			self.set_header('Content-Type', 'application/json; charset=UTF-8')
 
-		song_name = None
-		if self.request.arguments.has_key('song'):
-			song_name = self.get_argument('song')
-		if song_name is None or len(song_name) == 0:
-			logger.error('Missing argument \'song\'')
-			self.write(-2)
+		if datetime.datetime.now() < MusicTopHandler.music_top_cache_expire_time + interval:
+			res_ = MusicTopHandler.music_top_cache
+			if config.Mode == 'DEBUG' and pretty_state is not None and pretty_state:
+				res_ = common.pretty_print(res_)
+			self.write(res_)
 			return
-		res_box = None
-		MusicSearchHandler.lock_song_name_result_map.acquire()
-		try:
-			res_box = MusicSearchHandler.song_name_result_map.get(song_name)
-		finally:
-			MusicSearchHandler.lock_song_name_result_map.release()
-		if res_box is not None:
-			res_ = res_box.get('res')
-			time_ = res_box.get('time')
-			if res_ is not None and time_ is not None and datetime.datetime.now() < time_ + interval:
-				if config.Mode == 'DEBUG' and pretty_state is not None and pretty_state:
-					res_ = common.pretty_print(res_)
-				self.write(res_)
-				return
 		content_from_api = None
 		try:
-			response = urllib2.urlopen(BAIDU_SEARCH_URI % song_name)
+			response = urllib2.urlopen(BAIDU_TOP_URI)
 			content_from_api = response.read()
 			response.close()
 		except Exception, e:
-			logger.error('HTTP request error (from music.baidu.com/search/song), %s' % e)
+			logger.error('HTTP request error (from music.baidu.com/top/new/week), %s' % e)
 			self.write(-1)
 			return
 		if content_from_api is None or len(content_from_api) == 0:
-			logger.error('Response data exception (from music.baidu.com/search/song), %s' % e)
+			logger.error('Response data exception (from music.baidu.com/top/new/week), %s' % e)
 			self.write(-1)
 			return
 		object_from_api = None
@@ -85,16 +70,16 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 			if object_from_api is None:
 				raise Exception('object_from_api is None')
 		except Exception, e:
-			logger.error('HTML parse failure (from music.baidu.com/search/song), %s' % e)
+			logger.error('HTML parse failure (from music.baidu.com/top/new/week), %s' % e)
 			self.write(-2)
 			return
 		res = '{ '
 		res += '"result": ['
 		song_id_list = []
-		search_result_container = object_from_api.select('div[id="result_container"]')
-		if search_result_container is not None and len(search_result_container) > 0:
-			search_result_container = search_result_container[0]
-			data_songitems = search_result_container.select('li[data-songitem]')
+		new_week_song_list_wrapper = object_from_api.select('div[id="newWeekSongListWrapper"]')
+		if new_week_song_list_wrapper is not None and len(new_week_song_list_wrapper) > 0:
+			new_week_song_list_wrapper = new_week_song_list_wrapper[0]
+			data_songitems = new_week_song_list_wrapper.select('li[data-songitem]')
 			if data_songitems is not None and len(data_songitems) > 0:
 				for _ in data_songitems:
 					attr_data_songitem = _.get('data-songitem')
@@ -112,6 +97,8 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 							sid = songItem.get('sid')
 						if sid is not None:
 							song_id_list.append(str(sid))
+							if len(song_id_list) >= 11:
+								break
 		song_id_join_str = None
 		if len(song_id_list) > 0:
 			song_id_join_str = ','.join(song_id_list)
@@ -215,14 +202,8 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 				res += song_list_str
 		res += ']'
 		res += ' }'
-		MusicSearchHandler.lock_song_name_result_map.acquire()
-		try:
-			MusicSearchHandler.song_name_result_map[song_name] = {
-				'res': res,
-				'time': datetime.datetime.now()
-			}
-		finally:
-			MusicSearchHandler.lock_song_name_result_map.release()
+		MusicTopHandler.music_top_cache = res
+		MusicTopHandler.music_top_cache_expire_time = datetime.datetime.now()
 		if config.Mode == 'DEBUG' and pretty_state is not None and pretty_state:
 			res = common.pretty_print(res)
 		self.write(res)
@@ -231,4 +212,4 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 	def write(self, trunk):
 		if type(trunk) == int:
 			trunk = str(trunk)
-		super(MusicSearchHandler, self).write(trunk)
+		super(MusicTopHandler, self).write(trunk)

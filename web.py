@@ -9,8 +9,7 @@ import re
 from urllib import unquote
 
 import config
-import vehiclenet.weather
-import vehiclenet.music
+from vehiclenet import *
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -24,7 +23,7 @@ def deamon(chdir = False):
 		os._exit(1)
 
 def init():
-	vehiclenet.weather.WeatherHandler.cache()
+	WeatherHandler.cache()
 
 class DefaultHandler(tornado.web.RequestHandler):
 	def get(self):
@@ -66,8 +65,9 @@ settings = {
 
 routes = [
 	(r"/", DefaultHandler),
-	(r"/carlink/weather/findWeather.htm", vehiclenet.weather.WeatherHandler),
-	(r"/carlink/music/findMusic.htm", vehiclenet.music.MusicHandler),
+	(r"/carlink/weather/findWeather.htm", WeatherHandler),
+	(r"/carlink/music/findMusic.htm", MusicSearchHandler),
+	(r"/carlink/music/findMusicTop.htm", MusicTopHandler),
 ]
 
 if config.Mode == 'DEBUG':
