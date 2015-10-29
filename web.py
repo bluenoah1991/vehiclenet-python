@@ -68,6 +68,7 @@ routes = [
 	(r"/carlink/weather/findWeather.htm", WeatherHandler),
 	(r"/carlink/music/findMusic.htm", MusicSearchHandler),
 	(r"/carlink/music/findMusicTop.htm", MusicTopHandler),
+	(r"/carlink/music/findMusicLrc.htm", LrcSearchHandler),
 ]
 
 if config.Mode == 'DEBUG':
