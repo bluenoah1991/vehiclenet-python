@@ -14,8 +14,6 @@ sys.path.append('..')
 import common
 import config
 
-import pdb
-
 BAIDU_TOP_URI = 'http://music.baidu.com/top/new/week'
 BAIDU_SONGLINK_URI = 'http://play.baidu.com/data/music/songlink?songIds=%s'
 BAIDU_SONGINFO_URI = 'http://play.baidu.com/data/music/songInfo?songIds=%s'
@@ -31,8 +29,6 @@ class MusicTopHandler(tornado.web.RequestHandler):
 	music_top_cache_expire_time = datetime.datetime.min
 
 	def get(self):
-
-		pdb.set_trace()
 
 		pretty_state = False
 		if config.Mode == 'DEBUG':
@@ -183,6 +179,9 @@ class MusicTopHandler(tornado.web.RequestHandler):
 					album = _.get('albumName')
 					songlink = _.get('songLink')
 					lrclink = _.get('lrcLink')
+					if lrclink is not None and len(lrclink) > 0:
+						if lrclink.endswith('.lrc'):
+							lrclink = 'http://ting.baidu.com' + lrclink
 					time = _.get('time')
 					size = _.get('size')
 					format_ = _.get('format')
