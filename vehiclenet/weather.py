@@ -97,6 +97,12 @@ class WeatherHandler(tornado.web.RequestHandler):
 				return _
 
 	def transform_img_code(self, code):
+		if code is None:
+			code = '0'
+		if isinstance(code, basestring) and len(code) == 0:
+			code = '0'
+		if isinstance(code, int):
+			code = str(code)
 		new_code = WeatherHandler.img_code_map.get(code)
 		return new_code
 
@@ -173,20 +179,20 @@ class WeatherHandler(tornado.web.RequestHandler):
 			self.write(501)
 			return
 
-		hightemp = None
-		wind = None
-		img = None 
-		weather_text = None
-		lowtemp = None
-		sksd = None
-		skhour = None
-		skmin = None
-		month = None
-		year = None
-		day = None
-		sktemp = None
-		index_xc = None
-		pm25 = None
+		hightemp = '0' + u"\u2103"
+		wind = ''
+		img = '[]'
+		weather_text = ''
+		lowtemp = '0' + u"\u2103"
+		sksd = ''
+		skhour = 0
+		skmin = 0
+		month = 0
+		year = 0
+		day = 0
+		sktemp = '0' + u"\u2103"
+		index_xc = ''
+		pm25 = 0
 		
 		weather = object_from_api.get('weather')
 		futures = None
@@ -194,24 +200,44 @@ class WeatherHandler(tornado.web.RequestHandler):
 			weather = weather[0]
 			now = weather.get('now')
 			if now is not None:
-				sktemp = now.get('temperature') + u"\u2103"
+				sktemp = now.get('temperature')
+				if sktemp is None:
+					sktemp = '0'
+				sktemp += u"\u2103"
 				sksd = now.get('humidity')
+				if sksd is None:
+					sksd = ''
 				air_quality = now.get('air_quality')
 				if air_quality is not None:
 					city_air_quality = air_quality.get('city')
-					pm25 = city_air_quality.get('pm25')
-					if pm25 is None
-						pm25 = 0
+					if city_air_quality is not None:
+						pm25 = city_air_quality.get('pm25')
 			futures = weather.get('future')
 			if futures is not None and len(futures) > 0:
 				future_0 = futures[0]
-				hightemp = future_0.get('high') + u"\u2103"
+				hightemp = future_0.get('high')
+				if hightemp is None:
+					hightemp = '0'
+				hightemp += u"\u2103"
 				wind = future_0.get('wind')
+				if wind is None:
+					wind = ''
 				weather_text = future_0.get('text')
-				lowtemp = future_0.get('low') + u"\u2103"
+				if weather_text is None:
+					weather_text = ''
+				lowtemp = future_0.get('low')
+				if lowtemp is None:
+					lowtemp = '0'
+				lowtemp += u"\u2103"
+				code1 = future_0.get('code1')
+				if code1 is None:
+					code1 = '0'
+				code2 = future_0.get('code2')
+				if code2 is None:
+					code2 = '0'
 				img = '["%s", "%s"]' % (
-					self.transform_img_code(future_0.get('code1')), 
-					self.transform_img_code(future_0.get('code2'))
+					self.transform_img_code(code1), 
+					self.transform_img_code(code2)
 				)
 			today = weather.get('today')
 			if today is not None:
@@ -220,6 +246,8 @@ class WeatherHandler(tornado.web.RequestHandler):
 					car_washing = suggestion.get('car_washing')
 					if car_washing is not None:
 						index_xc = car_washing.get('brief')
+						if index_xc is None:
+							index_xc = ''
 		now_time = datetime.datetime.now()
 		skhour = now_time.hour
 		skmin = now_time.minute
@@ -252,20 +280,36 @@ class WeatherHandler(tornado.web.RequestHandler):
 				if first__:
 					first__ = False
 					continue
-				hightemp_ = None
-				wind_ = None
-				img_ = None
-				weather_ = None
-				lowtemp_ = None
+				hightemp_ = '0' + u"\u2103"
+				wind_ = ''
+				img_ = '[]'
+				weather_ = ''
+				lowtemp_ = '0' + u"\u2103"
 
-				hightemp_ = _.get('high') + u"\u2103"
+				hightemp_ = _.get('high')
+				if hightemp_ is None:
+					hightemp_ = '0'
+				hightemp_ += u"\u2103"
 				wind_ = _.get('wind')
+				if wind_ is None:
+					wind_ = ''
+				code1 = _.get('code1')
+				if code1 is None:
+					code1 = '0'
+				code2 = _.get('code2')
+				if code2 is None:
+					code2 = '0'
 				img_ = '["%s", "%s"]' % (
-					self.transform_img_code(_.get('code1')), 
-					self.transform_img_code(_.get('code2'))
+					self.transform_img_code(code1), 
+					self.transform_img_code(code2)
 				)
 				weather_ = _.get('text')
-				lowtemp_ = _.get('low') + u"\u2103"
+				if weather_ is None:
+					weather_ = ''
+				lowtemp_ = _.get('low')
+				if lowtemp_ is None:
+					lowtemp_ = '0'
+				lowtemp_ += u"\u2103"
 
 				res_future_section_in.append(('{ ' +
 					'"hightemp": "%s", ' % hightemp_ +
@@ -278,6 +322,8 @@ class WeatherHandler(tornado.web.RequestHandler):
 		res_future_section += ' ], '
 		res += res_future_section
 
+		if pm25 is None:
+			pm25 = 0
 		res_pm_25 = '"pm2.5": %s, ' % pm25
 		res += res_pm_25
 		#res_sutime = '"sutime": %s, ' % sutime
