@@ -200,6 +200,8 @@ class WeatherHandler(tornado.web.RequestHandler):
 				if air_quality is not None:
 					city_air_quality = air_quality.get('city')
 					pm25 = city_air_quality.get('pm25')
+					if pm25 is None
+						pm25 = 0
 			futures = weather.get('future')
 			if futures is not None and len(futures) > 0:
 				future_0 = futures[0]
