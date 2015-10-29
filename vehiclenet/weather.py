@@ -147,11 +147,11 @@ class WeatherHandler(tornado.web.RequestHandler):
 			content_from_api = response.read()
 			response.close()
 		except Exception, e:
-			logger.error('HTTP request error, error: (%s)' % e)
+			logger.error('HTTP request error (from thinkpage.cn), %s' % e)
 			self.write(501)
 			return
 		if content_from_api is None or len(content_from_api) == 0:
-			logger.error('Response data exception (from thinkpage.cn), length: %s, error: %s' % (len(content_from_api), e))
+			logger.error('Response data exception (from thinkpage.cn), %s' % e)
 			self.write(501)
 			return
 		object_from_api = None
@@ -160,7 +160,7 @@ class WeatherHandler(tornado.web.RequestHandler):
 			if object_from_api is None:
 				raise Exception('object_from_api is None')
 		except Exception, e:
-			logger.error('Response data format exception (from thinkpage.cn), length: %s, error: %s' % (len(content_from_api), e))
+			logger.error('JSON parse failure (from thinkpage.cn), %s' % e)
 			self.write(501)
 			return
 		status = object_from_api.get('status')

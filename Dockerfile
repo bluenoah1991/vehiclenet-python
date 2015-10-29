@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install wget -y
 
 RUN apt-get install python-pip build-essential python-dev -y
 RUN pip install tornado
+RUN pip install BeautifulSoup4
 
 EXPOSE 80
 #VOLUME ['/etc/localtime']

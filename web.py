@@ -10,6 +10,7 @@ from urllib import unquote
 
 import config
 import vehiclenet.weather
+import vehiclenet.music
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -66,6 +67,7 @@ settings = {
 routes = [
 	(r"/", DefaultHandler),
 	(r"/carlink/weather/findWeather.htm", vehiclenet.weather.WeatherHandler),
+	(r"/carlink/music/findMusic.htm", vehiclenet.music.MusicHandler),
 ]
 
 if config.Mode == 'DEBUG':
