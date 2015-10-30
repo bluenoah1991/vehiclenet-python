@@ -7,5 +7,6 @@ docker run -itd -p 80:80 -e "YOUR ENV" -v /etc/localtime:/etc/localtime:ro [IMAG
 
 ## Environment variable
 
-|| *Key* || *Value* ||  
-|| THINKPAGE\_CN\_API\_TOKEN || XXXXX ||  
+Key | Value
+--- | -----
+THINKPAGE\_CN\_API\_TOKEN | XXXXXX
