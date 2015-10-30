@@ -13,9 +13,8 @@ sys.path.append('..')
 import common
 import config
 
-API_TOKEN = 'FSUZWU8RKI'
 WEATHER_API_URI = 'https://api.thinkpage.cn/v2/weather/all.json?language=zh-chs&unit=c&aqi=city&key=%s&city=%s'
-WEATHER_API_URI = WEATHER_API_URI % (API_TOKEN, '%s')
+WEATHER_API_URI = WEATHER_API_URI % (config.THINKPAGE_CN_API_TOKEN, '%s')
 
 logger = logging.getLogger('web')
 
