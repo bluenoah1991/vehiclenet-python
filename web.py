@@ -3,6 +3,7 @@
 import sys, os
 import tornado.ioloop
 import tornado.web
+import tornado.httpserver
 import logging
 import logging.handlers
 import re
@@ -99,6 +100,14 @@ if __name__ == "__main__":
 
 	init()
 
-	application.listen(80)
-	print 'Server is running, listening on port 80....'
-	tornado.ioloop.IOLoop.instance().start()
+	if '-P' in sys.argv:
+		http_server = tornado.httpserver.HTTPServer(application)
+		http_server.bind(80, '0.0.0.0')
+		http_server.start() #TODO Based on CPU kernel number
+		print 'Server is running, listening on port 80....'
+		tornado.ioloop.IOLoop.instance().start()
+	else:
+		application.listen(80)
+		print 'Server is running, listening on port 80....'
+		tornado.ioloop.IOLoop.instance().start()
+
