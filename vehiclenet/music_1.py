@@ -27,8 +27,6 @@ class LrcSearchHandler(tornado.web.RequestHandler):
 
 	song_name_result_map = {} # TODO persistence
 
-	lock_song_name_result_map = threading.Lock()
-
 	@tornado.gen.coroutine
 	def get(self):
 
@@ -50,12 +48,7 @@ class LrcSearchHandler(tornado.web.RequestHandler):
 			logger.error('Missing argument \'song\'')
 			self.write(-2)
 			return
-		res_box = None
-		LrcSearchHandler.lock_song_name_result_map.acquire()
-		try:
-			res_box = LrcSearchHandler.song_name_result_map.get(song_name)
-		finally:
-			LrcSearchHandler.lock_song_name_result_map.release()
+		res_box = LrcSearchHandler.song_name_result_map.get(song_name)
 		if res_box is not None:
 			res_ = res_box.get('res')
 			time_ = res_box.get('time')
@@ -101,14 +94,10 @@ class LrcSearchHandler(tornado.web.RequestHandler):
 					if href is not None and len(href) > 0:
 						if href.endswith('.lrc'):
 							res = 'http://ting.baidu.com' + href 
-		LrcSearchHandler.lock_song_name_result_map.acquire()
-		try:
-			LrcSearchHandler.song_name_result_map[song_name] = {
-				'res': res,
-				'time': datetime.datetime.now()
-			}
-		finally:
-			LrcSearchHandler.lock_song_name_result_map.release()
+		LrcSearchHandler.song_name_result_map[song_name] = {
+			'res': res,
+			'time': datetime.datetime.now()
+		}
 		if config.Mode == 'DEBUG' and pretty_state is not None and pretty_state:
 			res = common.pretty_print(res)
 		self.write(res)

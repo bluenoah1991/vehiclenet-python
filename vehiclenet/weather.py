@@ -29,9 +29,6 @@ class WeatherHandler(tornado.web.RequestHandler):
 	city_name_cache = {} # TODO persistence
 	city_name_result_map = {} # TODO persistence
 
-	lock_city_name_cache = threading.Lock()
-	lock_city_name_result_map = threading.Lock()
-
 	img_code_map = {}
 
 	@classmethod
@@ -80,21 +77,12 @@ class WeatherHandler(tornado.web.RequestHandler):
 				img_code_map_file.close()
 				
 	def name_parse(self, city_name):
-		city_strict_name = None
-		WeatherHandler.lock_city_name_cache.acquire()
-		try:
-			city_strict_name = WeatherHandler.city_name_cache.get(city_name)
-		finally:
-			WeatherHandler.lock_city_name_cache.release()
+		city_strict_name = WeatherHandler.city_name_cache.get(city_name)
 		if city_strict_name is not None:
 			return city_strict_name
 		for _ in WeatherHandler.city_name_list:
 			if _ in city_name:
-				WeatherHandler.lock_city_name_cache.acquire()
-				try:
-					WeatherHandler.city_name_cache[city_name] = _
-				finally:
-					WeatherHandler.lock_city_name_cache.release()
+				WeatherHandler.city_name_cache[city_name] = _
 				return _
 
 	def transform_img_code(self, code):
@@ -134,12 +122,7 @@ class WeatherHandler(tornado.web.RequestHandler):
 			logger.error('No matching area name (%s)' % raw_city_name)
 			self.write(201)
 			return
-		res_box = None
-		WeatherHandler.lock_city_name_result_map.acquire()
-		try:
-			res_box = WeatherHandler.city_name_result_map.get(city_name)
-		finally:
-			WeatherHandler.lock_city_name_result_map.release()
+		res_box = WeatherHandler.city_name_result_map.get(city_name)
 		if res_box is not None:
 			res_ = res_box.get('res')
 			time_ = res_box.get('time')
@@ -335,14 +318,10 @@ class WeatherHandler(tornado.web.RequestHandler):
 		res_city = '"city": "%s"'
 		res += res_city
 		res += ' }'
-		WeatherHandler.lock_city_name_result_map.acquire()
-		try:
-			WeatherHandler.city_name_result_map[city_name] = {
-				'res': res,
-				'time': datetime.datetime.now()
-			}
-		finally:
-			WeatherHandler.lock_city_name_result_map.release()
+		WeatherHandler.city_name_result_map[city_name] = {
+			'res': res,
+			'time': datetime.datetime.now()
+		}
 		res = res % raw_city_name
 		if config.Mode == 'DEBUG' and pretty_state is not None and pretty_state:
 			res = common.pretty_print(res)

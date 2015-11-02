@@ -28,8 +28,6 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 
 	song_name_result_map = {} # TODO persistence
 
-	lock_song_name_result_map = threading.Lock()
-
 	@tornado.gen.coroutine
 	def get(self):
 
@@ -51,12 +49,7 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 			logger.error('Missing argument \'song\'')
 			self.write(-2)
 			return
-		res_box = None
-		MusicSearchHandler.lock_song_name_result_map.acquire()
-		try:
-			res_box = MusicSearchHandler.song_name_result_map.get(song_name)
-		finally:
-			MusicSearchHandler.lock_song_name_result_map.release()
+		res_box = MusicSearchHandler.song_name_result_map.get(song_name)
 		if res_box is not None:
 			res_ = res_box.get('res')
 			time_ = res_box.get('time')
@@ -233,14 +226,10 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 				res += song_list_str
 		res += ']'
 		res += ' }'
-		MusicSearchHandler.lock_song_name_result_map.acquire()
-		try:
-			MusicSearchHandler.song_name_result_map[song_name] = {
-				'res': res,
-				'time': datetime.datetime.now()
-			}
-		finally:
-			MusicSearchHandler.lock_song_name_result_map.release()
+		MusicSearchHandler.song_name_result_map[song_name] = {
+			'res': res,
+			'time': datetime.datetime.now()
+		}
 		if config.Mode == 'DEBUG' and pretty_state is not None and pretty_state:
 			res = common.pretty_print(res)
 		self.write(res)

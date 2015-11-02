@@ -26,8 +26,6 @@ class NewsHandler(tornado.web.RequestHandler):
 
 	news_keyword_result_map = {} # TODO persistence
 
-	lock_news_keyword_result_map = threading.Lock()
-
 	@tornado.gen.coroutine
 	def get(self):
 
@@ -49,12 +47,7 @@ class NewsHandler(tornado.web.RequestHandler):
 			logger.error('Missing argument \'keyword\'')
 			self.write(-2)
 			return
-		res_box = None
-		NewsHandler.lock_news_keyword_result_map.acquire()
-		try:
-			res_box = NewsHandler.news_keyword_result_map.get(keyword)
-		finally:
-			NewsHandler.lock_news_keyword_result_map.release()
+		res_box = NewsHandler.news_keyword_result_map.get(keyword)
 		if res_box is not None:
 			res_ = res_box.get('res')
 			time_ = res_box.get('time')
@@ -110,14 +103,10 @@ class NewsHandler(tornado.web.RequestHandler):
 				res += titles_str
 		res += ']'
 		res += ' }'
-		NewsHandler.lock_news_keyword_result_map.acquire()
-		try:
-			NewsHandler.news_keyword_result_map[keyword] = {
-				'res': res,
-				'time': datetime.datetime.now()
-			}
-		finally:
-			NewsHandler.lock_news_keyword_result_map.release()
+		NewsHandler.news_keyword_result_map[keyword] = {
+			'res': res,
+			'time': datetime.datetime.now()
+		}
 		if config.Mode == 'DEBUG' and pretty_state is not None and pretty_state:
 			res = common.pretty_print(res)
 		self.write(res)
