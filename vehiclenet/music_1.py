@@ -2,6 +2,8 @@
 
 import sys, os, threading
 import tornado.web
+import tornado.httpclient
+import tornado.gen
 import urllib2
 import logging
 from bs4 import BeautifulSoup
@@ -27,6 +29,7 @@ class LrcSearchHandler(tornado.web.RequestHandler):
 
 	lock_song_name_result_map = threading.Lock()
 
+	@tornado.gen.coroutine
 	def get(self):
 
 		pretty_state = False
@@ -63,9 +66,9 @@ class LrcSearchHandler(tornado.web.RequestHandler):
 				return
 		content_from_api = None
 		try:
-			response = urllib2.urlopen(BAIDU_LRC_URI % song_name)
-			content_from_api = response.read()
-			response.close()
+			http_client = tornado.httpclient.AsyncHTTPClient()
+			response = yield http_client.fetch(BAIDU_LRC_URI % song_name)
+			content_from_api = response.body
 		except Exception, e:
 			logger.error('HTTP request error (from music.baidu.com/search/lrc), %s' % e)
 			self.write(-1)

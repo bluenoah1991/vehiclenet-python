@@ -2,6 +2,8 @@
 
 import sys, os, threading
 import tornado.web
+import tornado.httpclient
+import tornado.gen
 import urllib2
 import logging
 from bs4 import BeautifulSoup
@@ -28,6 +30,7 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 
 	lock_song_name_result_map = threading.Lock()
 
+	@tornado.gen.coroutine
 	def get(self):
 
 		pretty_state = False
@@ -64,9 +67,9 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 				return
 		content_from_api = None
 		try:
-			response = urllib2.urlopen(BAIDU_SEARCH_URI % song_name)
-			content_from_api = response.read()
-			response.close()
+			http_client = tornado.httpclient.AsyncHTTPClient()
+			response = yield http_client.fetch(BAIDU_SEARCH_URI % song_name)
+			content_from_api = response.body
 		except Exception, e:
 			logger.error('HTTP request error (from music.baidu.com/search/song), %s' % e)
 			self.write(-1)
@@ -114,9 +117,9 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 			# songInfo
 			content_from_api = None
 			try:
-				response = urllib2.urlopen(BAIDU_SONGINFO_URI % song_id_join_str)
-				content_from_api = response.read()
-				response.close()
+				http_client = tornado.httpclient.AsyncHTTPClient()
+				response = yield http_client.fetch(BAIDU_SONGINFO_URI % song_id_join_str)
+				content_from_api = response.body
 			except Exception, e:
 				logger.error('HTTP request error (from play.baidu.com/data/music/songInfo, %s' % e)
 				self.write(-1)
@@ -151,9 +154,9 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 			# songlink
 			content_from_api = None
 			try:
-				response = urllib2.urlopen(BAIDU_SONGLINK_URI % song_id_join_str)
-				content_from_api = response.read()
-				response.close()
+				http_client = tornado.httpclient.AsyncHTTPClient()
+				response = yield http_client.fetch(BAIDU_SONGLINK_URI % song_id_join_str)
+				content_from_api = response.body
 			except Exception, e:
 				logger.error('HTTP request error (from play.baidu.com/data/music/songlink, %s' % e)
 				self.write(-1)

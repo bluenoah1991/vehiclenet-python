@@ -2,6 +2,8 @@
 
 import sys, os, threading
 import tornado.web
+import tornado.httpclient
+import tornado.gen
 import urllib2
 import logging
 import json
@@ -105,6 +107,7 @@ class WeatherHandler(tornado.web.RequestHandler):
 		new_code = WeatherHandler.img_code_map.get(code)
 		return new_code
 
+	@tornado.gen.coroutine
 	def get(self):
 
 		pretty_state = False
@@ -148,13 +151,15 @@ class WeatherHandler(tornado.web.RequestHandler):
 				return
 		content_from_api = None
 		try:
-			response = urllib2.urlopen(WEATHER_API_URI % city_name)
-			content_from_api = response.read()
-			response.close()
+			http_client = tornado.httpclient.AsyncHTTPClient()
+			response = yield http_client.fetch(WEATHER_API_URI % city_name)
+			content_from_api = response.body
 		except Exception, e:
 			logger.error('HTTP request error (from thinkpage.cn), %s' % e)
 			self.write(501)
 			return
+		finally:
+			http_client.close()
 		if content_from_api is None or len(content_from_api) == 0:
 			logger.error('Response data exception (from thinkpage.cn), %s' % e)
 			self.write(501)
