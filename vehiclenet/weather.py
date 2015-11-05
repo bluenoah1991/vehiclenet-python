@@ -127,7 +127,19 @@ class WeatherHandler(tornado.web.RequestHandler):
 			res_ = res_box.get('res')
 			time_ = res_box.get('time')
 			if res_ is not None and time_ is not None and datetime.datetime.now() < time_ + interval:
-				res_ = res_ % raw_city_name
+				now_time = datetime.datetime.now()
+				skhour = now_time.hour
+				skmin = now_time.minute
+				month = now_time.month
+				year = now_time.year
+				day = now_time.day
+				res_ = res_ % (
+					skhour,
+					skmin,
+					month,
+					year,
+					day,
+					raw_city_name)
 				if config.Mode == 'DEBUG' and pretty_state is not None and pretty_state:
 					res_ = common.pretty_print(res_)
 				self.write(res_)
@@ -235,12 +247,6 @@ class WeatherHandler(tornado.web.RequestHandler):
 						index_xc = car_washing.get('brief')
 						if index_xc is None:
 							index_xc = ''
-		now_time = datetime.datetime.now()
-		skhour = now_time.hour
-		skmin = now_time.minute
-		month = now_time.month
-		year = now_time.year
-		day = now_time.day
 
 		res = '{ '
 		res_today_section = ('"today": { ' +
@@ -250,11 +256,16 @@ class WeatherHandler(tornado.web.RequestHandler):
 			'"weather": "%s", ' % weather_text +
 			'"lowtemp": "%s", ' % lowtemp +
 			'"sksd": "%s", ' % sksd +
-			'"skhour": %s, ' % skhour +
-			'"skmin": %s, ' % skmin +
-			'"month": %s, ' % month +
-			'"year": %s, ' % year +
-			'"day": %s, ' % day +
+			#'"skhour": %s, ' % skhour +
+			#'"skmin": %s, ' % skmin +
+			#'"month": %s, ' % month +
+			#'"year": %s, ' % year +
+			#'"day": %s, ' % day +
+			'"skhour": %s, ' +
+			'"skmin": %s, ' +
+			'"month": %s, ' +
+			'"year": %s, ' +
+			'"day": %s, ' +
 			'"sktemp": "%s", ' % sktemp +
 			'"index_xc": "%s"' % index_xc +
 			' }, ')
@@ -322,7 +333,19 @@ class WeatherHandler(tornado.web.RequestHandler):
 			'res': res,
 			'time': datetime.datetime.now()
 		}
-		res = res % raw_city_name
+		now_time = datetime.datetime.now()
+		skhour = now_time.hour
+		skmin = now_time.minute
+		month = now_time.month
+		year = now_time.year
+		day = now_time.day
+		res = res % (
+			skhour,
+			skmin,
+			month,
+			year,
+			day,
+			raw_city_name)
 		if config.Mode == 'DEBUG' and pretty_state is not None and pretty_state:
 			res = common.pretty_print(res)
 		self.write(res)
