@@ -16,7 +16,8 @@ sys.path.append('..')
 import common
 import config
 
-BAIDU_TOP_URI = 'http://music.baidu.com/top/new/week'
+#BAIDU_TOP_URI = 'http://music.baidu.com/top/new/week'
+BAIDU_TOP_URI = 'http://music.baidu.com/top/dayhot'
 BAIDU_SONGLINK_URI = 'http://play.baidu.com/data/music/songlink?songIds=%s'
 BAIDU_SONGINFO_URI = 'http://play.baidu.com/data/music/songInfo?songIds=%s'
 
@@ -75,10 +76,11 @@ class MusicTopHandler(tornado.web.RequestHandler):
 		res = '{ '
 		res += '"result": ['
 		song_id_list = []
-		new_week_song_list_wrapper = object_from_api.select('div[id="newWeekSongListWrapper"]')
-		if new_week_song_list_wrapper is not None and len(new_week_song_list_wrapper) > 0:
-			new_week_song_list_wrapper = new_week_song_list_wrapper[0]
-			data_songitems = new_week_song_list_wrapper.select('li[data-songitem]')
+		# HERE
+		song_list_wrapper = object_from_api.select('div[id="songListWrapper"]')
+		if song_list_wrapper is not None and len(song_list_wrapper) > 0:
+			song_list_wrapper = song_list_wrapper[0]
+			data_songitems = song_list_wrapper.select('li[data-songitem]')
 			if data_songitems is not None and len(data_songitems) > 0:
 				for _ in data_songitems:
 					attr_data_songitem = _.get('data-songitem')
