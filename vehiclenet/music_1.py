@@ -60,7 +60,9 @@ class LrcSearchHandler(tornado.web.RequestHandler):
 		content_from_api = None
 		try:
 			http_client = tornado.httpclient.AsyncHTTPClient()
-			response = yield http_client.fetch(BAIDU_LRC_URI % song_name)
+			song_encode_name = song_name.encode('utf-8')
+			song_encode_name = urllib2.quote(song_encode_name)
+			response = yield http_client.fetch(BAIDU_LRC_URI % song_encode_name)
 			content_from_api = response.body
 		except Exception, e:
 			logger.error('HTTP request error (from music.baidu.com/search/lrc), %s' % e)
@@ -94,12 +96,12 @@ class LrcSearchHandler(tornado.web.RequestHandler):
 					if href is not None and len(href) > 0:
 						if href.endswith('.lrc'):
 							res = 'http://ting.baidu.com' + href 
+		if res is None:
+			res = ''
 		LrcSearchHandler.song_name_result_map[song_name] = {
 			'res': res,
 			'time': datetime.datetime.now()
 		}
-		if config.Mode == 'DEBUG' and pretty_state is not None and pretty_state:
-			res = common.pretty_print(res)
 		self.write(res)
 
 
