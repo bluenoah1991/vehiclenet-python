@@ -31,7 +31,7 @@ class NewsHandler(tornado.web.RequestHandler):
 
 		pretty_state = False
 		if config.Mode == 'DEBUG':
-			logger.debug('Request URI: %s' % self.request.uri)
+			logger.debug('Request URI: %s (%s)' % (self.request.uri, self.request.remote_ip))
 			if self.request.arguments.has_key('pretty'):
 				pretty_state = self.get_argument('pretty')
 
