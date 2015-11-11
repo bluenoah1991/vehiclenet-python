@@ -28,7 +28,7 @@ def init():
 
 class DefaultHandler(tornado.web.RequestHandler):
 	def get(self):
-		self.write('VehicleNet Say Hello!')
+		self.write('VehicleNet Say Hello! (v%s)' % config.VERSION)
 
 class LogHandler(tornado.web.RequestHandler):
 	def get(self):
