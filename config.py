@@ -2,7 +2,7 @@
 
 import os
 
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 
 Mode = 'DEBUG'
 #Mode = 'RELEASE'
