@@ -26,7 +26,7 @@ interval = datetime.timedelta(minutes=59)
 
 class MusicSearchHandler(tornado.web.RequestHandler):
 
-	song_name_result_map = {} # TODO persistence
+	key_result_map = {} # TODO persistence
 
 	@tornado.gen.coroutine
 	def get(self):
@@ -42,14 +42,14 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 		else:
 			self.set_header('Content-Type', 'application/json; charset=UTF-8')
 
-		song_name = None
-		if self.request.arguments.has_key('song'):
-			song_name = self.get_argument('song')
-		if song_name is None or len(song_name) == 0:
-			logger.error('Missing argument \'song\'')
+		key = None
+		if self.request.arguments.has_key('key'):
+			key = self.get_argument('key')
+		if key is None or len(key) == 0:
+			logger.error('Missing argument \'key\'')
 			self.write(-2)
 			return
-		res_box = MusicSearchHandler.song_name_result_map.get(song_name)
+		res_box = MusicSearchHandler.key_result_map.get(key)
 		if res_box is not None:
 			res_ = res_box.get('res')
 			time_ = res_box.get('time')
@@ -61,7 +61,7 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 		content_from_api = None
 		try:
 			http_client = tornado.httpclient.AsyncHTTPClient()
-			response = yield http_client.fetch(BAIDU_SEARCH_URI % song_name)
+			response = yield http_client.fetch(BAIDU_SEARCH_URI % key)
 			content_from_api = response.body
 		except Exception, e:
 			logger.error('HTTP request error (from music.baidu.com/search/song), %s' % e)
@@ -211,10 +211,10 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 					if format_ is None:
 						format_ = ''
 					song_ = ('{ ' +
-						'"songname": "%s", ' % songname +
+						'"songname": "%s", ' % songname.replace('"', '\\"') +
 						'"songid": "%s", ' % songid +
-						'"singer": "%s", ' % singer +
-						'"album": "%s", ' % album +
+						'"singer": "%s", ' % singer.replace('"', '&quot;') +
+						'"album": "%s", ' % album.replace('"', '&quot;') +
 						'"songlink": "%s", ' % songlink +
 						'"lrclink": "%s", ' % lrclink +
 						'"time": %s, ' % time +
@@ -226,7 +226,7 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 				res += song_list_str
 		res += ']'
 		res += ' }'
-		MusicSearchHandler.song_name_result_map[song_name] = {
+		MusicSearchHandler.key_result_map[key] = {
 			'res': res,
 			'time': datetime.datetime.now()
 		}

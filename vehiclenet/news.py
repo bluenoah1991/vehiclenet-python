@@ -24,7 +24,7 @@ interval = datetime.timedelta(minutes=20)
 
 class NewsHandler(tornado.web.RequestHandler):
 
-	news_keyword_result_map = {} # TODO persistence
+	news_key_result_map = {} # TODO persistence
 
 	@tornado.gen.coroutine
 	def get(self):
@@ -40,14 +40,14 @@ class NewsHandler(tornado.web.RequestHandler):
 		else:
 			self.set_header('Content-Type', 'application/json; charset=UTF-8')
 
-		keyword = None
-		if self.request.arguments.has_key('keyword'):
-			keyword = self.get_argument('keyword')
-		if keyword is None or len(keyword) == 0:
-			logger.error('Missing argument \'keyword\'')
+		key = None
+		if self.request.arguments.has_key('key'):
+			key = self.get_argument('key')
+		if key is None or len(key) == 0:
+			logger.error('Missing argument \'key\'')
 			self.write(-2)
 			return
-		res_box = NewsHandler.news_keyword_result_map.get(keyword)
+		res_box = NewsHandler.news_key_result_map.get(key)
 		if res_box is not None:
 			res_ = res_box.get('res')
 			time_ = res_box.get('time')
@@ -59,7 +59,7 @@ class NewsHandler(tornado.web.RequestHandler):
 		content_from_api = None
 		try:
 			http_client = tornado.httpclient.AsyncHTTPClient()
-			response = yield http_client.fetch(BAIDU_NEWS_URI % keyword)
+			response = yield http_client.fetch(BAIDU_NEWS_URI % key)
 			content_from_api = response.body
 		except Exception, e:
 			logger.error('HTTP request error (from news.baidu.com), %s' % e)
@@ -103,7 +103,7 @@ class NewsHandler(tornado.web.RequestHandler):
 				res += titles_str
 		res += ']'
 		res += ' }'
-		NewsHandler.news_keyword_result_map[keyword] = {
+		NewsHandler.news_key_result_map[key] = {
 			'res': res,
 			'time': datetime.datetime.now()
 		}

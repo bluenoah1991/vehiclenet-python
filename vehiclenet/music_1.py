@@ -25,7 +25,7 @@ interval = datetime.timedelta(minutes=59)
 
 class LrcSearchHandler(tornado.web.RequestHandler):
 
-	song_name_result_map = {} # TODO persistence
+	key_result_map = {} # TODO persistence
 
 	@tornado.gen.coroutine
 	def get(self):
@@ -41,14 +41,14 @@ class LrcSearchHandler(tornado.web.RequestHandler):
 		else:
 			self.set_header('Content-Type', 'application/json; charset=UTF-8')
 
-		song_name = None
-		if self.request.arguments.has_key('song'):
-			song_name = self.get_argument('song')
-		if song_name is None or len(song_name) == 0:
-			logger.error('Missing argument \'song\'')
+		key = None
+		if self.request.arguments.has_key('key'):
+			key = self.get_argument('key')
+		if key is None or len(key) == 0:
+			logger.error('Missing argument \'key\'')
 			self.write(-2)
 			return
-		res_box = LrcSearchHandler.song_name_result_map.get(song_name)
+		res_box = LrcSearchHandler.key_result_map.get(key)
 		if res_box is not None:
 			res_ = res_box.get('res')
 			time_ = res_box.get('time')
@@ -60,9 +60,9 @@ class LrcSearchHandler(tornado.web.RequestHandler):
 		content_from_api = None
 		try:
 			http_client = tornado.httpclient.AsyncHTTPClient()
-			song_encode_name = song_name.encode('utf-8')
-			song_encode_name = urllib2.quote(song_encode_name)
-			response = yield http_client.fetch(BAIDU_LRC_URI % song_encode_name)
+			encode_key = key.encode('utf-8')
+			encode_key = urllib2.quote(encode_key)
+			response = yield http_client.fetch(BAIDU_LRC_URI % encode_key)
 			content_from_api = response.body
 		except Exception, e:
 			logger.error('HTTP request error (from music.baidu.com/search/lrc), %s' % e)
@@ -98,7 +98,7 @@ class LrcSearchHandler(tornado.web.RequestHandler):
 							res = 'http://ting.baidu.com' + href 
 		if res is None:
 			res = ''
-		LrcSearchHandler.song_name_result_map[song_name] = {
+		LrcSearchHandler.key_result_map[key] = {
 			'res': res,
 			'time': datetime.datetime.now()
 		}

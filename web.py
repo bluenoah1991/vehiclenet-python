@@ -66,12 +66,11 @@ settings = {
 
 routes = [
 	(r"/", DefaultHandler),
-	(r"/carlink/weather/findWeather.htm", WeatherHandler),
-	(r"/carlink/music/findMusic.htm", MusicSearchHandler),
-	(r"/carlink//music/findMusic.htm", MusicSearchHandler),
-	(r"/carlink/music/findMusicTop.htm", MusicTopHandler),
-	(r"/carlink/music/findMusicLrc.htm", LrcSearchHandler),
-	(r"/carlink/news/findNews.htm", NewsHandler),
+	(r"/vehiclenet/\d{10}/weather/search", WeatherHandler),
+	(r"/vehiclenet/\d{10}/music/search", MusicSearchHandler),
+	(r"/vehiclenet/\d{10}/music/top", MusicTopHandler),
+	(r"/vehiclenet/\d{10}/music/lrc", LrcSearchHandler),
+	(r"/vehiclenet/\d{10}/news/search", NewsHandler),
 ]
 
 if config.Mode == 'DEBUG':
