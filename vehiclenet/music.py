@@ -211,10 +211,10 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 					if format_ is None:
 						format_ = ''
 					song_ = ('{ ' +
-						'"songname": "%s", ' % songname.replace('"', '\\"') +
+						'"songname": "%s", ' % common.strict_str(songname) +
 						'"songid": "%s", ' % songid +
-						'"singer": "%s", ' % singer.replace('"', '&quot;') +
-						'"album": "%s", ' % album.replace('"', '&quot;') +
+						'"singer": "%s", ' % common.strict_str(singer) +
+						'"album": "%s", ' % common.strict_str(album) +
 						'"songlink": "%s", ' % songlink +
 						'"lrclink": "%s", ' % lrclink +
 						'"time": %s, ' % time +
