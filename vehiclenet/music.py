@@ -186,7 +186,8 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 							songname = _.get('songName')
 							singer = _.get('artistName')
 					if songname is None:
-						songname = ''
+						#songname = ''
+						continue
 					if singer is None:
 						singer = ''
 					album = _.get('albumName')
@@ -194,7 +195,8 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 						album = ''
 					songlink = _.get('songLink')
 					if songlink is None:
-						songlink = ''
+						#songlink = ''
+						continue
 					lrclink = _.get('lrcLink')
 					if lrclink is not None and len(lrclink) > 0:
 						if lrclink.endswith('.lrc'):
