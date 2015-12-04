@@ -27,3 +27,8 @@ def pretty_print(jsonstr):
 	prettystr = prettystr.decode('unicode_escape')
 	return prettystr
 
+def strict_str(str_):
+	str_ = str_.replace('"', '\\"')
+	str_ = str_.strip()
+	return str_
+
