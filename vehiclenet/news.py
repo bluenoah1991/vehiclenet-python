@@ -59,7 +59,9 @@ class NewsHandler(tornado.web.RequestHandler):
 		content_from_api = None
 		try:
 			http_client = tornado.httpclient.AsyncHTTPClient()
-			response = yield http_client.fetch(BAIDU_NEWS_URI % keyword)
+			encode_keyword = keyword.encode('utf-8')
+			encode_keyword = urllib2.quote(encode_keyword)
+			response = yield http_client.fetch(BAIDU_NEWS_URI % encode_keyword)
 			content_from_api = response.body
 		except Exception, e:
 			logger.error('HTTP request error (from news.baidu.com), %s' % e)
