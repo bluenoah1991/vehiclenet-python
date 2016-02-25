@@ -59,6 +59,8 @@ class NewsHandler(tornado.web.RequestHandler):
 		content_from_api = None
 		try:
 			http_client = tornado.httpclient.AsyncHTTPClient()
+			encode_key = key.encode('utf-8')
+			encode_key = urllib2.quote(encode_key)
 			response = yield http_client.fetch(BAIDU_NEWS_URI % key)
 			content_from_api = response.body
 		except Exception, e:

@@ -61,7 +61,9 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 		content_from_api = None
 		try:
 			http_client = tornado.httpclient.AsyncHTTPClient()
-			response = yield http_client.fetch(BAIDU_SEARCH_URI % key)
+			encode_key = key.encode('utf-8')
+			encode_key = urllib2.quote(encode_key)
+			response = yield http_client.fetch(BAIDU_SEARCH_URI % encode_key)
 			content_from_api = response.body
 		except Exception, e:
 			logger.error('HTTP request error (from music.baidu.com/search/song), %s' % e)
