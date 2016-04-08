@@ -201,8 +201,8 @@ class MusicSearchHandler(tornado.web.RequestHandler):
 						continue
 					lrclink = _.get('lrcLink')
 					if lrclink is not None and len(lrclink) > 0:
-						if lrclink.endswith('.lrc'):
-							lrclink = 'http://ting.baidu.com' + lrclink
+						if not lrclink.endswith('.lrc'):
+							lrclink = 'http://musicdata.baidu.com'
 					if lrclink is None:
 						lrclink = ''
 					time = _.get('time')
