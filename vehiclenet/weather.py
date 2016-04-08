@@ -147,7 +147,9 @@ class WeatherHandler(tornado.web.RequestHandler):
 		content_from_api = None
 		try:
 			http_client = tornado.httpclient.AsyncHTTPClient()
-			response = yield http_client.fetch(WEATHER_API_URI % city_name)
+			city_encode_name = city_name.encode('utf-8')
+			city_encode_name = urllib2.quote(city_encode_name)
+			response = yield http_client.fetch(WEATHER_API_URI % city_encode_name)
 			content_from_api = response.body
 		except Exception, e:
 			logger.error('HTTP request error (from thinkpage.cn), %s' % e)
