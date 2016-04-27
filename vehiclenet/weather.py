@@ -194,6 +194,8 @@ class WeatherHandler(tornado.web.RequestHandler):
 		sktemp = '0' + u"\u2103"
 		index_xc = ''
 		pm25 = 0
+		aqi = 0
+		quality = ''
 		
 		weather = object_from_api.get('weather')
 		futures = None
@@ -213,6 +215,8 @@ class WeatherHandler(tornado.web.RequestHandler):
 					city_air_quality = air_quality.get('city')
 					if city_air_quality is not None:
 						pm25 = city_air_quality.get('pm25')
+						aqi = city_air_quality.get('aqi')
+						quality = city_air_quality.get('quality')
 			futures = weather.get('future')
 			if futures is not None and len(futures) > 0:
 				future_0 = futures[0]
@@ -326,6 +330,14 @@ class WeatherHandler(tornado.web.RequestHandler):
 			pm25 = 0
 		res_pm_25 = '"pm2.5": %s, ' % pm25
 		res += res_pm_25
+		if aqi is None:
+			aqi = 0
+		res_aqi = '"aqi": %s, ' % aqi
+		res += res_aqi
+		if quality is None:
+			quality = ''
+		res_quality = '"quality": "%s", ' % quality
+		res += res_quality
 		#res_sutime = '"sutime": %s, ' % sutime
 		#res += res_sutime
 		res_city = '"city": "%s"'
