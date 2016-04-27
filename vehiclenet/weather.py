@@ -196,6 +196,7 @@ class WeatherHandler(tornado.web.RequestHandler):
 		pm25 = 0
 		aqi = 0
 		quality = ''
+		pressure = ''
 		
 		weather = object_from_api.get('weather')
 		futures = None
@@ -210,6 +211,9 @@ class WeatherHandler(tornado.web.RequestHandler):
 				sksd = now.get('humidity')
 				if sksd is None:
 					sksd = ''
+				pressure = now.get('pressure')
+				if pressure is None:
+					pressure = ''
 				air_quality = now.get('air_quality')
 				if air_quality is not None:
 					city_air_quality = air_quality.get('city')
@@ -338,6 +342,10 @@ class WeatherHandler(tornado.web.RequestHandler):
 			quality = ''
 		res_quality = '"quality": "%s", ' % quality
 		res += res_quality
+		if pressure is None:
+			pressure = ''
+		res_pressure = '"pressure": "%s", ' % pressure
+		res += res_pressure
 		#res_sutime = '"sutime": %s, ' % sutime
 		#res += res_sutime
 		res_city = '"city": "%s"'
