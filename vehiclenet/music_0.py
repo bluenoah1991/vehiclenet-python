@@ -17,7 +17,7 @@ import common
 import config
 
 #BAIDU_TOP_URI = 'http://music.baidu.com/top/new/week'
-BAIDU_TOP_URI = 'http://music.baidu.com/top/dayhot'
+BAIDU_TOP_URI = 'http://music.baidu.com/top/new/day'
 BAIDU_SONGLINK_URI = 'http://play.baidu.com/data/music/songlink?songIds=%s'
 BAIDU_SONGINFO_URI = 'http://play.baidu.com/data/music/songInfo?songIds=%s'
 
