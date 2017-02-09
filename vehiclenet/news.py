@@ -17,6 +17,7 @@ import common
 import config
 
 BAIDU_NEWS_URI = 'http://news.baidu.com/ns?tn=newstitle&word=%s'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36'
 
 logger = logging.getLogger('web')
 
@@ -61,14 +62,19 @@ class NewsHandler(tornado.web.RequestHandler):
 			http_client = tornado.httpclient.AsyncHTTPClient()
 			encode_keyword = keyword.encode('utf-8')
 			encode_keyword = urllib2.quote(encode_keyword)
-			response = yield http_client.fetch(BAIDU_NEWS_URI % encode_keyword)
+			http_request = tornado.httpclient.HTTPRequest(
+				BAIDU_NEWS_URI % encode_keyword,
+				headers={
+					'User-Agent': USER_AGENT
+				})
+			response = yield http_client.fetch(http_request)
 			content_from_api = response.body
 		except Exception, e:
 			logger.error('HTTP request error (from news.baidu.com), %s' % e)
 			self.write(-1)
 			return
 		if content_from_api is None or len(content_from_api) == 0:
-			logger.error('Response data exception (from news.baidu.com), %s' % e)
+			logger.error('Response data exception (from news.baidu.com)')
 			self.write(-1)
 			return
 		object_from_api = None
